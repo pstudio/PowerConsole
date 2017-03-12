@@ -320,13 +320,72 @@ namespace PowerConsoleTests.Parser
         [TestMethod]
         public void StringToVariableAssignment()
         {
-            // TODO: stub
+            var input = "$variable = 'Hello World'";
+            var assignment = PowerParser.Assignment.Parse(input);
+            Assert.IsNotNull(assignment);
+            Assert.AreEqual("variable", assignment.Variable);
+            Assert.IsNotNull(assignment.Value);
+            Assert.AreEqual(ParseType.Type.String, assignment.Value.ParsedType);
+            Assert.IsTrue(assignment.Value.Value is string);
+            Assert.AreEqual("Hello World", assignment.Value.Value);
         }
 
         [TestMethod]
         public void NumberToVariableAssignment()
         {
-            // TODO: stub
+            var input = "$variable = 2";
+            var assignment = PowerParser.Assignment.Parse(input);
+            Assert.IsNotNull(assignment);
+            Assert.AreEqual("variable", assignment.Variable);
+            Assert.IsNotNull(assignment.Value);
+            Assert.AreEqual(ParseType.Type.Number, assignment.Value.ParsedType);
+            Assert.IsTrue(assignment.Value.Value is double);
+            Assert.AreEqual(2.0, assignment.Value.Value);
+        }
+
+        [TestMethod]
+        public void PipeChainToVariableAssignment()
+        {
+            var input = "$variable = Find-Object 'player' | Get-Transform";
+            var assignment = PowerParser.Assignment.Parse(input);
+            Assert.IsNotNull(assignment);
+            Assert.AreEqual("variable", assignment.Variable);
+            Assert.IsNotNull(assignment.Value);
+            Assert.AreEqual(ParseType.Type.PipeChain, assignment.Value.ParsedType);
+            Assert.IsTrue(assignment.Value.Value is PipeChain);
+            var pipechain = (PipeChain) assignment.Value.Value;
+            Assert.IsTrue(pipechain.Commands.Length == 2);
+
+            Assert.IsNotNull(pipechain.Commands[0]);
+            var command = pipechain.Commands[0];
+            Assert.AreEqual("Find-Object", command.CommandName);
+            Assert.IsNotNull(command.Arguments);
+            Assert.IsTrue(command.Arguments.Length == 1);
+            Assert.AreEqual(ParseType.Type.String, command.Arguments[0].ParsedType);
+            Assert.IsTrue(command.Arguments[0].Value is string);
+            Assert.AreEqual("player", command.Arguments[0].Value);
+
+            Assert.IsNotNull(pipechain.Commands[1]);
+            command = pipechain.Commands[1];
+            Assert.AreEqual("Get-Transform", command.CommandName);
+            Assert.IsNotNull(command.Arguments);
+            Assert.IsTrue(command.Arguments.Length == 0);
+        }
+
+        [TestMethod]
+        public void ReflectionToVariableAssignment()
+        {
+            var input = "$variable = $player.Transform";
+            var assignment = PowerParser.Assignment.Parse(input);
+            Assert.IsNotNull(assignment);
+            Assert.AreEqual("variable", assignment.Variable);
+            Assert.IsNotNull(assignment.Value);
+            Assert.AreEqual(ParseType.Type.Reflection, assignment.Value.ParsedType);
+            Assert.IsTrue(assignment.Value.Value is Reflection);
+            var reflection = (Reflection) assignment.Value.Value;
+            Assert.AreEqual("player", reflection.Variable);
+            Assert.IsTrue(reflection.Identifiers.Length == 1);
+            Assert.AreEqual("Transform", reflection.Identifiers[0]);
         }
 
         #endregion

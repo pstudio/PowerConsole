@@ -106,23 +106,26 @@ namespace pstudio.PowerConsole.Parser
         public static readonly Parser<PipeChain> PipeChain = 
             Command.Once()
             .Then(first => Pipe.Token()
-            .Then(_ => Command).AtLeastOnce()
+            .Then(_ => Command)
+            .AtLeastOnce()
             .Select(tail => new PipeChain(first.Concat(tail)
                 .ToArray())));
 
 
         /// <summary>
         /// Parses an assignment.
-        /// Grammar: Variable = (Command | Variable | QuotedString | Number)
+        /// Grammar: Variable = (PipeChain | Reflection | Command | Variable | QuotedString | Number)
         /// </summary>
         public static readonly Parser<Assignment> Assignment =
             from var in Variable.Token()
             from eq in Assign.Token()
             from val in
-                Command.Token().Select(com => new ParseType(com, ParseType.Type.Command))
-                .XOr(Variable.Token().Select(v => new ParseType(v, ParseType.Type.Variable)))
-                .XOr(QuotedString.Token().Select(s => new ParseType(s, ParseType.Type.String)))
-                .XOr(Number.Token().Select(n => new ParseType(n, ParseType.Type.Number)))
+                PipeChain.Token().Select(pipe => new ParseType(pipe, ParseType.Type.PipeChain))
+                .Or(Reflection.Token().Select(refl => new ParseType(refl, ParseType.Type.Reflection)))
+                .Or(Command.Token().Select(com => new ParseType(com, ParseType.Type.Command)))
+                .Or(Variable.Token().Select(v => new ParseType(v, ParseType.Type.Variable)))
+                .Or(QuotedString.Token().Select(s => new ParseType(s, ParseType.Type.String)))
+                .Or(Number.Token().Select(n => new ParseType(n, ParseType.Type.Number)))
             select new Assignment(var, val);
     }
 

@@ -10,7 +10,8 @@
             Number,
             Variable,
             Command,
-            Reflection
+            Reflection,
+            PipeChain
         }
 
         public Type ParsedType { get; }
