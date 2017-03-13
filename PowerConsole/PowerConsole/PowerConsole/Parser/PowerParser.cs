@@ -5,7 +5,8 @@ using Sprache;
 
 namespace pstudio.PowerConsole.Parser
 {
-    internal static class PowerParser
+
+    public static class PowerParser //TODO: Changed from internal tu public for debugging reasons. Change class back to internal when done.
     {
         /// <summary>
         /// Parses an identifier.
@@ -40,19 +41,37 @@ namespace pstudio.PowerConsole.Parser
         /// Parses a single or double quoted text string.
         /// Grammar: ("[Char]*"|'[Char]*')
         /// </summary>
-        public static readonly Parser<string> QuotedString = DoubleQuotedString.XOr(SingleQuotedString); 
+        public static readonly Parser<string> QuotedString = DoubleQuotedString.XOr(SingleQuotedString);
+
+        public static readonly Parser<double> NegativeNumber =
+            Parse.Char('-')
+                .Then(_ => Parse.DecimalInvariant)
+                .Select(n => double.Parse("-" + n, CultureInfo.InvariantCulture));
+
+        public static readonly Parser<double> PositiveNumber =
+            Parse.Char('+').Then(_ => Parse.DecimalInvariant).Select(n => double.Parse(n, CultureInfo.InvariantCulture));
+
+        public static readonly Parser<double> UnsignedNumber =
+            Parse.DecimalInvariant.Select(n => double.Parse(n, CultureInfo.InvariantCulture));
 
         /// <summary>
         /// Parses a decimal number.
-        /// Grammar: -?[0-9]*(.[0-9]*)?
+        /// Grammar: (-+)?[0-9]*(.[0-9]*)?
         /// </summary>
         public static readonly Parser<double> Number =
-            Parse.Char('-').XOr(Parse.Char('+')).Optional().Then(op => Parse.DecimalInvariant.Select(n => double.Parse(op.IsDefined ? op.Get() + n : n, CultureInfo.InvariantCulture)));
+            NegativeNumber.XOr(PositiveNumber).XOr(UnsignedNumber);
+            //from sign in Parse.Char('-').Or(Parse.Char('+')).Optional()
+            //from number in Parse.DecimalInvariant
+            //select double.Parse(sign.IsDefined ? sign.Get() + number : number, CultureInfo.InvariantCulture);
 
-        /// <summary>
-        /// Parses the pipe operator.
-        /// Grammar: |
-        /// </summary>
+
+            //Parse.DecimalInvariant.Select(n => double.Parse(n, CultureInfo.InvariantCulture));
+            //Parse.Char('-').XOr(Parse.Char('+')).Optional().Then(op => Parse.DecimalInvariant.Select(n => double.Parse(op.IsDefined ? op.Get() + n : n, CultureInfo.InvariantCulture)));
+
+            /// <summary>
+            /// Parses the pipe operator.
+            /// Grammar: |
+            /// </summary>
         public static readonly Parser<char> Pipe = Parse.Char('|');
 
         /// <summary>
@@ -127,6 +146,27 @@ namespace pstudio.PowerConsole.Parser
                 .Or(QuotedString.Token().Select(s => new ParseType(s, ParseType.Type.String)))
                 .Or(Number.Token().Select(n => new ParseType(n, ParseType.Type.Number)))
             select new Assignment(var, val);
+
+
+        /// <summary>
+        /// Parse a statement.
+        /// Grammar: Assignment | PipeChain | Reflection | Command | Variable | QuotedString | Number
+        /// </summary>
+        public static readonly Parser<ParseType> Statement =
+            Assignment.Token().Select(assignment => new ParseType(assignment, ParseType.Type.Assignment))
+                .Or(PipeChain.Token().Select(pipe => new ParseType(pipe, ParseType.Type.PipeChain)))
+                .Or(Reflection.Token().Select(refl => new ParseType(refl, ParseType.Type.Reflection)))
+                .Or(Command.Token().Select(com => new ParseType(com, ParseType.Type.Command)))
+                .Or(Variable.Token().Select(v => new ParseType(v, ParseType.Type.Variable)))
+                .Or(QuotedString.Token().Select(s => new ParseType(s, ParseType.Type.String)))
+                .Or(Number.Token().Select(n => new ParseType(n, ParseType.Type.Number)));
+
+        /// <summary>
+        /// Parse input.
+        /// </summary>
+        /// <param name="input">PowerConsole input</param>
+        /// <returns>Parsed result</returns>
+        public static ParseType ParseInput(string input) => Statement.Parse(input);
     }
 
 }
