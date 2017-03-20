@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.Serialization;
 using Sprache;
 
 namespace pstudio.PowerConsole.Parser
 {
 
-    public static class PowerParser //TODO: Changed from internal tu public for debugging reasons. Change class back to internal when done.
+    internal static class PowerParser
     {
         /// <summary>
         /// Parses an identifier.
@@ -166,7 +167,45 @@ namespace pstudio.PowerConsole.Parser
         /// </summary>
         /// <param name="input">PowerConsole input</param>
         /// <returns>Parsed result</returns>
-        public static ParseType ParseInput(string input) => Statement.Parse(input);
+        /// <exception cref="IncompleteParseException">Thrown if not the entire input is parsed.</exception>
+        public static ParseType ParseInput(string input)
+        {
+            var result = Statement.TryParse(input);
+            if (result.Remainder.AtEnd)
+                return result.Value;
+
+            throw new IncompleteParseException("Could not parse the entire input", result.Remainder.Source, result.Remainder.Position);
+        }
+
+        public class IncompleteParseException : Exception
+        {
+            public string Input { get; }
+            public int Position { get; }
+
+            public IncompleteParseException(string input, int position)
+            {
+                Input = input;
+                Position = position;
+            }
+
+            public IncompleteParseException(string message, string input, int position) : base(message)
+            {
+                Input = input;
+                Position = position;
+            }
+
+            public IncompleteParseException(string message, Exception innerException, string input, int position) : base(message, innerException)
+            {
+                Input = input;
+                Position = position;
+            }
+
+            protected IncompleteParseException(SerializationInfo info, StreamingContext context, string input, int position) : base(info, context)
+            {
+                Input = input;
+                Position = position;
+            }
+        }
     }
 
 }

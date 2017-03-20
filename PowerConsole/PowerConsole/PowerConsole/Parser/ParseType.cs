@@ -1,6 +1,6 @@
 ﻿namespace pstudio.PowerConsole.Parser
 {
-    public class ParseType //TODO: Changed from internal tu public for debugging reasons. Change class back to internal when done.
+    internal class ParseType
     {
         public enum Type
         {

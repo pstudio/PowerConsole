@@ -2,7 +2,7 @@
 
 namespace pstudio.PowerConsole.Parser
 {
-    public class Command //TODO: Changed from internal tu public for debugging reasons. Change class back to internal when done.
+    internal class Command
     {
         public string CommandName { get; }
         public ParseType[] Arguments { get; }
@@ -14,7 +14,7 @@ namespace pstudio.PowerConsole.Parser
         }
     }
 
-    public class Assignment //TODO: Changed from internal tu public for debugging reasons. Change class back to internal when done.
+    internal class Assignment
     {
         public string Variable { get; }
         public ParseType Value { get; }
@@ -26,7 +26,7 @@ namespace pstudio.PowerConsole.Parser
         }
     }
 
-    public class Reflection //TODO: Changed from internal tu public for debugging reasons. Change class back to internal when done.
+    internal class Reflection
     {
         public string Variable { get; }
         public string[] Identifiers { get; }
@@ -38,7 +38,7 @@ namespace pstudio.PowerConsole.Parser
         }
     }
 
-    public class PipeChain //TODO: Changed from internal tu public for debugging reasons. Change class back to internal when done.
+    internal class PipeChain
     {
         public Command[] Commands { get; }
 
