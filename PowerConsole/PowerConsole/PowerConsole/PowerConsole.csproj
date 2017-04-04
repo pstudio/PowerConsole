@@ -49,6 +49,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Command\BaseCommand.cs" />
+    <Compile Include="Command\Command.cs" />
+    <Compile Include="Command\CommandAttribute.cs" />
+    <Compile Include="Command\CommandContext.cs" />
+    <Compile Include="Command\CommandExceptions.cs" />
+    <Compile Include="Command\CommandExecuter.cs" />
+    <Compile Include="Command\Commands\Math\AddNumberCommand.cs" />
+    <Compile Include="Command\Commands\Math\DivideNumberCommand.cs" />
+    <Compile Include="Command\Commands\Math\MultiplyNumberCommand.cs" />
+    <Compile Include="Command\Commands\Math\SubtractNumberCommand.cs" />
+    <Compile Include="Command\ParameterAttribute.cs" />
     <Compile Include="Context\DefaultContext.cs" />
     <Compile Include="Context\IContext.cs" />
     <Compile Include="Host\OutputColorType.cs" />

@@ -47,13 +47,13 @@ namespace pstudio.PowerConsole.Parser
         public static readonly Parser<double> NegativeNumber =
             Parse.Char('-')
                 .Then(_ => Parse.DecimalInvariant)
-                .Select(n => double.Parse("-" + n, CultureInfo.InvariantCulture));
+                .Select(n => Double.Parse("-" + n, CultureInfo.InvariantCulture));
 
         public static readonly Parser<double> PositiveNumber =
-            Parse.Char('+').Then(_ => Parse.DecimalInvariant).Select(n => double.Parse(n, CultureInfo.InvariantCulture));
+            Parse.Char('+').Then(_ => Parse.DecimalInvariant).Select(n => Double.Parse(n, CultureInfo.InvariantCulture));
 
         public static readonly Parser<double> UnsignedNumber =
-            Parse.DecimalInvariant.Select(n => double.Parse(n, CultureInfo.InvariantCulture));
+            Parse.DecimalInvariant.Select(n => Double.Parse(n, CultureInfo.InvariantCulture));
 
         /// <summary>
         /// Parses a decimal number.
@@ -94,6 +94,12 @@ namespace pstudio.PowerConsole.Parser
         public static readonly Parser<string> Variable = Parse.Char('$').Then(_ => Identifier);
 
         /// <summary>
+        /// Parses a parameter identifier.
+        /// Grammar: -Identifier
+        /// </summary>
+        public static readonly Parser<string> Parameter = Parse.Char('-').Then(_ => Identifier);
+
+        /// <summary>
         /// Parses a reflection call.
         /// Grammar: Variable(.Identifier)+
         /// </summary>
@@ -107,15 +113,16 @@ namespace pstudio.PowerConsole.Parser
 
         /// <summary>
         /// Parses a command.
-        /// Grammar: Identifier (Identifier | Variable | QuotedString | Number)*
+        /// Grammar: Identifier (Identifier | Parameter | Variable | QuotedString | Number)*
         /// </summary>
         public static readonly Parser<Command> Command =
             from com in Identifier.Token()
             from args in 
                 Identifier.Token().Select(id => new ParseType(id, ParseType.Type.Identifier))
-                .XOr(Variable.Token().Select(v => new ParseType(v, ParseType.Type.Variable)))
-                .XOr(QuotedString.Token().Select(s => new ParseType(s, ParseType.Type.String)))
-                .XOr(Number.Token().Select(n => new ParseType(n, ParseType.Type.Number)))
+                .Or(Parameter.Token().Select(p => new ParseType(p, ParseType.Type.Parameter)))
+                .Or(Variable.Token().Select(v => new ParseType(v, ParseType.Type.Variable)))
+                .Or(QuotedString.Token().Select(s => new ParseType(s, ParseType.Type.String)))
+                .Or(Number.Token().Select(n => new ParseType(n, ParseType.Type.Number)))
                 .Many()
             select new Command(com, args.ToArray());
 
@@ -167,9 +174,13 @@ namespace pstudio.PowerConsole.Parser
         /// </summary>
         /// <param name="input">PowerConsole input</param>
         /// <returns>Parsed result</returns>
+        /// <exception cref="ArgumentException">Thrown if input is null or empty.</exception>
         /// <exception cref="IncompleteParseException">Thrown if not the entire input is parsed.</exception>
         public static ParseType ParseInput(string input)
         {
+            if (string.IsNullOrEmpty(input))
+                throw new ArgumentException("Input string is null or empty");
+
             var result = Statement.TryParse(input);
             if (result.Remainder.AtEnd)
                 return result.Value;

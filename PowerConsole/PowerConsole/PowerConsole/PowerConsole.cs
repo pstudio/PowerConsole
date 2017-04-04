@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using pstudio.PowerConsole.Command;
 using pstudio.PowerConsole.Context;
 using pstudio.PowerConsole.Host;
 using pstudio.PowerConsole.Parser;
@@ -22,11 +23,12 @@ namespace pstudio.PowerConsole
         /// Creates a new Power Console.
         /// </summary>
         /// <param name="host">The host that will handle string input/output.</param>
-        public PowerConsole(IHost host)
+        /// <param name="context">The context the console will work in.</param>
+        public PowerConsole(IHost host, IContext context)
         {
             _host = host;
 
-            _context = new DefaultContext(); // TODO: user constructor initialization
+            _context = context;
         }
 
         public void Execute(string input)
@@ -35,7 +37,9 @@ namespace pstudio.PowerConsole
             /*TODO: Add method to get previous input history
              * Examine Powershell commandlet implementation.
              * should execute just fire a commandlet and then send a callback to the caller (UnityPowerConsole) when the command is done?
-             * What should be returned from execute? A string or the object result from running the command, which the user can then transform to a string?
+             * TODO: Implement first draft of a Command Manager. Load commands from assembly/namespace, allow execution of commands
+             * TODO: ////!!!!!!!!Work on piping Next.!!!!!!!!//////////////
+             * possibly alter Parser so that it can parse Command -varname value
              */
             try
             {
@@ -84,11 +88,11 @@ namespace pstudio.PowerConsole
                 case ParseType.Type.Variable:
                     return HandleVariable(type.Value as string);
                 case ParseType.Type.Command:
-                    return HandleCommand();
+                    return HandleCommand(type.Value as Parser.Command);
                 case ParseType.Type.Reflection:
-                    return HandleReflection();
+                    return HandleReflection(type.Value as Reflection);
                 case ParseType.Type.PipeChain:
-                    return HandlePipeChain();
+                    return HandlePipeChain(type.Value as PipeChain);
                 case ParseType.Type.Assignment:
                     return HandleAssignment(type.Value as Assignment);
                 default:
@@ -108,19 +112,19 @@ namespace pstudio.PowerConsole
             return value;
         }
 
-        private object HandlePipeChain()
+        private object HandlePipeChain(PipeChain pipeChain)
         {
             return null;
         }
 
-        private object HandleReflection()
+        private object HandleReflection(Reflection reflection)
         {
             return null;
         }
 
-        private object HandleCommand()
+        private object HandleCommand(Parser.Command command)
         {
-            return null;
+            return CommandExecuter.Execute(command, _context.CommandContext, _host, _variables);
         }
 
         private object HandleVariable(string identifier)

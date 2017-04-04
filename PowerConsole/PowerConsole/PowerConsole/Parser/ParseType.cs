@@ -9,6 +9,7 @@
             String,
             Number,
             Variable,
+            Parameter,
             Command,
             Reflection,
             PipeChain,

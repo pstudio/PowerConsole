@@ -43,7 +43,7 @@ namespace PowerConsoleTests.Parser
                 PowerParser.Identifier.Parse(input);
                 Assert.Fail();
             }
-            catch (ParseException e)
+            catch (ParseException)
             {
             }
 
@@ -53,7 +53,7 @@ namespace PowerConsoleTests.Parser
                 PowerParser.Identifier.Parse(input);
                 Assert.Fail();
             }
-            catch (ParseException e)
+            catch (ParseException)
             {
             }
 
@@ -132,7 +132,7 @@ namespace PowerConsoleTests.Parser
                 PowerParser.DoubleQuotedString.Parse(input);
                 Assert.Fail();
             }
-            catch (ParseException e)
+            catch (ParseException)
             {
             }
         }
@@ -150,7 +150,7 @@ namespace PowerConsoleTests.Parser
                 PowerParser.SingleQuotedString.Parse(input);
                 Assert.Fail();
             }
-            catch (ParseException e)
+            catch (ParseException)
             {
             }
         }
@@ -275,8 +275,8 @@ namespace PowerConsoleTests.Parser
             Assert.AreEqual("variable", assignment.Variable);
             Assert.IsNotNull(assignment.Value);
             Assert.AreEqual(ParseType.Type.Command, assignment.Value.ParsedType);
-            Assert.IsTrue(assignment.Value.Value is Command);
-            var command = (Command) assignment.Value.Value;
+            Assert.IsTrue(assignment.Value.Value is pstudio.PowerConsole.Parser.Command);
+            var command = (pstudio.PowerConsole.Parser.Command) assignment.Value.Value;
             Assert.AreEqual("Find-Object", command.CommandName);
             Assert.IsNotNull(command.Arguments);
             Assert.IsTrue(command.Arguments.Length == 1);

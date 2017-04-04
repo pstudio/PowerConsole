@@ -3,6 +3,8 @@ using System.Linq;
 using System.Text;
 using JetBrains.Annotations;
 using pstudio.PowerConsole;
+using pstudio.PowerConsole.Command.Commands.Math;
+using pstudio.PowerConsole.Context;
 using pstudio.PowerConsole.Host;
 using TMPro;
 using UnityEngine;
@@ -20,7 +22,13 @@ public class UnityPowerConsole : MonoBehaviour, IHost
     [UsedImplicitly]
     private void Awake()
     {
-        _console = new PowerConsole(this);
+        var context = new DefaultContext();
+        context.CommandContext.RegisterCommand<AddNumberCommand>();
+        context.CommandContext.RegisterCommand<SubtractNumberCommand>();
+        context.CommandContext.RegisterCommand<MultiplyNumberCommand>();
+        context.CommandContext.RegisterCommand<DivideNumberCommand>();
+
+        _console = new PowerConsole(this, context);
     }
 
     [UsedImplicitly]
