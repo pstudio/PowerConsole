@@ -58,7 +58,7 @@ namespace PowerConsoleTests.Command
                 var result = CommandExecuter.Execute(parseResult.Value as pstudio.PowerConsole.Parser.Command, _context, _host, _variables);
                 Assert.Fail();
             }
-            catch (MissingPositionalArgumentException)
+            catch (MissingMandatoryParameterException)
             {
                 
             }

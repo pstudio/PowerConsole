@@ -26,30 +26,34 @@ namespace pstudio.PowerConsole.Command
 
             command.Reset();
 
-            // Positional properties are mandatory and must be set by the user
-            if (command.PositionalProperties.Count() > parseCommand.Arguments.Length)
-            {
-                throw new MissingPositionalArgumentException($"The command '{parseCommand.CommandName}' expects {command.PositionalProperties.Count()} positional arguments. Only {parseCommand.Arguments.Length} arguments were provided.");
-            }
+            var mandatoryProperties =
+                command.PositionalProperties.Union(command.NamedProperties)
+                    .Where(prop => prop.Attribute.Mandatory)
+                    .ToList();
 
-            foreach (var positionalProperty in command.PositionalProperties)
-            {
-                var parseType = parseCommand.Arguments[positionalProperty.Attribute.Position];
+            var position = 0;
 
-                TrySetPropertyValue(command, positionalProperty.Property, parseType, variables);
-            }
-
-            // Keep track of mandatory named properties
-            var mandatoryProperties = command.NamedProperties.Where(prop => prop.Attribute.Mandatory).ToList();
-
-            for (var i = command.PositionalProperties.Count; i < parseCommand.Arguments.Length; i++)
+            for (var i = 0; i < parseCommand.Arguments.Length; i++)
             {
                 var parseType = parseCommand.Arguments[i];
 
+                // Handle positional property
                 if (parseType.ParsedType != ParseType.Type.Parameter)
-                    throw new InvalidArgumentTypeException($"A named parameter identifier was expected but received argument value '{parseType.Value}'");
+                {
+                    if (position >= command.PositionalProperties.Count)
+                        throw new Exception($"Unexpected positional argument: '{parseType.Value}' received.");
 
-                var namedProperty = command.NamedProperties.First(prop => string.Equals(prop.Property.Name, ((string) parseType.Value), StringComparison.CurrentCultureIgnoreCase));
+                    var property = command.PositionalProperties[position++];
+                    TrySetPropertyValue(command, property.Property, parseType, variables);
+
+                    if (property.Attribute.Mandatory)
+                        mandatoryProperties.Remove(property);
+
+                    continue;;
+                }
+
+                // Handle named property
+                var namedProperty = command.NamedProperties.First(prop => string.Equals(prop.Property.Name, ((string)parseType.Value), StringComparison.CurrentCultureIgnoreCase));
 
                 if (namedProperty == null)
                     throw new InvalidNamedParameterException($"The named parameter '{parseType.Value}' is not recognized.");
@@ -70,13 +74,61 @@ namespace pstudio.PowerConsole.Command
 
                 TrySetPropertyValue(command, namedProperty.Property, argumentType, variables);
 
-                // Remove property from list to indicate it has been set
-                mandatoryProperties.Remove(namedProperty);
+                if (namedProperty.Attribute.Mandatory)
+                    mandatoryProperties.Remove(namedProperty);
             }
+
+            //// Positional properties are mandatory and must be set by the user
+            //if (command.PositionalProperties.Count() > parseCommand.Arguments.Length)
+            //{
+            //    throw new MissingPositionalArgumentException($"The command '{parseCommand.CommandName}' expects {command.PositionalProperties.Count()} positional arguments. Only {parseCommand.Arguments.Length} arguments were provided.");
+            //}
+
+            //foreach (var positionalProperty in command.PositionalProperties)
+            //{
+            //    var parseType = parseCommand.Arguments[positionalProperty.Attribute.Position];
+
+            //    TrySetPropertyValue(command, positionalProperty.Property, parseType, variables);
+            //}
+
+            //// Keep track of mandatory named properties
+            ////var mandatoryProperties = command.NamedProperties.Where(prop => prop.Attribute.Mandatory).ToList();
+
+            //for (var i = command.PositionalProperties.Count; i < parseCommand.Arguments.Length; i++)
+            //{
+            //    var parseType = parseCommand.Arguments[i];
+
+            //    if (parseType.ParsedType != ParseType.Type.Parameter)
+            //        throw new InvalidArgumentTypeException($"A named parameter identifier was expected but received argument value '{parseType.Value}'");
+
+            //    var namedProperty = command.NamedProperties.First(prop => string.Equals(prop.Property.Name, ((string) parseType.Value), StringComparison.CurrentCultureIgnoreCase));
+
+            //    if (namedProperty == null)
+            //        throw new InvalidNamedParameterException($"The named parameter '{parseType.Value}' is not recognized.");
+
+            //    // Check if the property is a flag
+            //    if (namedProperty.Property.PropertyType == typeof(bool))
+            //    {
+            //        namedProperty.Property.SetValue(command, true, null);
+            //        continue;
+            //    }
+
+            //    // If the property is not a flag we must check the next argument for the value to assign to the property
+
+            //    if (++i >= parseCommand.Arguments.Length)
+            //        throw new MissingNamedArgumentException($"The named parameter '{parseType.Value}' is missing an argument of type '{namedProperty.Property.PropertyType}'.");
+
+            //    var argumentType = parseCommand.Arguments[i];
+
+            //    TrySetPropertyValue(command, namedProperty.Property, argumentType, variables);
+
+            //    // Remove property from list to indicate it has been set
+            //    mandatoryProperties.Remove(namedProperty);
+            //}
 
             // Make sure all mandatory parameters are set
             if (mandatoryProperties.Count > 0)
-                throw new MissingMandatoryParameter($"The mandatory named parameter '{mandatoryProperties.First().Property.Name}' is missing.");
+                throw new MissingMandatoryParameterException($"The mandatory parameter '{mandatoryProperties.First().Property.Name}' is missing.");
 
             command._host = host;
             return command.Process();

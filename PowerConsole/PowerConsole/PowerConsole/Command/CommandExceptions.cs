@@ -161,21 +161,21 @@ namespace pstudio.PowerConsole.Command
     /// <summary>
     /// Thrown when the user has not provided all mandatory named parameters.
     /// </summary>
-    public class MissingMandatoryParameter : Exception
+    public class MissingMandatoryParameterException : Exception
     {
-        public MissingMandatoryParameter()
+        public MissingMandatoryParameterException()
         {
         }
 
-        public MissingMandatoryParameter(string message) : base(message)
+        public MissingMandatoryParameterException(string message) : base(message)
         {
         }
 
-        public MissingMandatoryParameter(string message, Exception innerException) : base(message, innerException)
+        public MissingMandatoryParameterException(string message, Exception innerException) : base(message, innerException)
         {
         }
 
-        protected MissingMandatoryParameter(SerializationInfo info, StreamingContext context) : base(info, context)
+        protected MissingMandatoryParameterException(SerializationInfo info, StreamingContext context) : base(info, context)
         {
         }
     }
