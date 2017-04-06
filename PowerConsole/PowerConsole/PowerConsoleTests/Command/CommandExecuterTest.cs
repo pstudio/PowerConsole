@@ -123,6 +123,20 @@ namespace PowerConsoleTests.Command
             Assert.AreEqual("Goodbye", result);
         }
 
+        [TestMethod]
+        public void PipeChainExecuted()
+        {
+            _context.RegisterCommand<AddNumberCommand>();
+            _context.RegisterCommand<SubtractNumberCommand>();
+            _context.RegisterCommand<MultiplyNumberCommand>();
+            _context.RegisterCommand<DivideNumberCommand>();
+
+            var parseResult = PowerParser.ParseInput("Add-Number 3 7 | Subtract-Number 5 | Multiply-Number 4 | Divide-Number 40 -FlipArguments");
+            var result = CommandExecuter.ExecuteChain(parseResult.Value as PipeChain, _context, _host, _variables);
+
+            Assert.AreEqual(2.0, result);
+        }
+
         [Command("Test", "Command")]
         public class TestCommand : pstudio.PowerConsole.Command.Command
         {

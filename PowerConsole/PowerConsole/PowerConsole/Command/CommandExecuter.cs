@@ -4,13 +4,14 @@ using System.Linq;
 using System.Reflection;
 using pstudio.PowerConsole.Host;
 using pstudio.PowerConsole.Parser;
+using UniRx.InternalUtil;
 
 namespace pstudio.PowerConsole.Command
 {
     internal static class CommandExecuter
     {
         public static object Execute(Parser.Command parseCommand, CommandContext commandContext, IHost host,
-            Dictionary<string, object> variables)
+            Dictionary<string, object> variables, object pipeValue = null)
         {
             // TODO: When the project is in a mature state, consider alternative ways to assign values to properties
             // Build setters in CommandContext.CommandInfo
@@ -31,6 +32,32 @@ namespace pstudio.PowerConsole.Command
                     .Where(prop => prop.Attribute.Mandatory)
                     .ToList();
 
+            // Handle pipe value
+            Command.CommandProperty pipeProperty = null;
+            if (pipeValue != null)
+            {
+                pipeProperty =
+                    command.PositionalProperties.FirstOrDefault( // First check positional parameters for a place to put piped value
+                        prop =>
+                            prop.Attribute.AllowPipe &&
+                            (prop.Property.PropertyType.IsInstanceOfType(pipeValue) ||
+                             IsNumericAssignment(prop.Property.PropertyType, pipeValue.GetType()))) ??
+                    command.NamedProperties.FirstOrDefault( // Otherwise check named parameters for a place to put piped value
+                                 prop =>
+                                     prop.Attribute.AllowPipe &&
+                                     (prop.Property.PropertyType.IsInstanceOfType(pipeValue) ||
+                                      IsNumericAssignment(prop.Property.PropertyType, pipeValue.GetType())));
+
+                if (pipeProperty == null)
+                    throw new InvalidPipeArgumentTypeException(
+                        $"There is no parameter in command: '{parseCommand.CommandName}' that accepts pipe value of type: '{pipeValue.GetType()}'");
+                
+                pipeProperty.Property.SetValue(command, Convert.ChangeType(pipeValue, pipeProperty.Property.PropertyType), null);
+                if (pipeProperty.Attribute.Mandatory)
+                    mandatoryProperties.Remove(pipeProperty);
+                
+            }
+
             var position = 0;
 
             for (var i = 0; i < parseCommand.Arguments.Length; i++)
@@ -41,9 +68,19 @@ namespace pstudio.PowerConsole.Command
                 if (parseType.ParsedType != ParseType.Type.Parameter)
                 {
                     if (position >= command.PositionalProperties.Count)
-                        throw new Exception($"Unexpected positional argument: '{parseType.Value}' received.");
+                        throw new UnexpectedPositionalArgument($"Unexpected positional argument '{parseType.Value}' received.");
 
                     var property = command.PositionalProperties[position++];
+
+                    // Check to see if parameter has already been assigned through piping
+                    if (pipeProperty == property)
+                    {
+                        if (position >= command.PositionalProperties.Count)
+                            throw new UnexpectedPositionalArgument($"Unexpected positional argument '{parseType.Value}' received.");
+
+                        property = command.PositionalProperties[position++];
+                    }
+
                     TrySetPropertyValue(command, property.Property, parseType, variables);
 
                     if (property.Attribute.Mandatory)
@@ -57,6 +94,10 @@ namespace pstudio.PowerConsole.Command
 
                 if (namedProperty == null)
                     throw new InvalidNamedParameterException($"The named parameter '{parseType.Value}' is not recognized.");
+
+                // Check to see if parameter has already been assigned through piping
+                if (pipeProperty == namedProperty)
+                    throw new NamedParameterAssignedThroughPiping($"The named parameter '{parseType.Value}' has already been assigned through piping.");
 
                 // Check if the property is a flag
                 if (namedProperty.Property.PropertyType == typeof(bool))
@@ -157,6 +198,17 @@ namespace pstudio.PowerConsole.Command
 
         private static bool IsNumericAssignment(Type target, Type value) =>
             NumericTypes.Contains(target) && NumericTypes.Contains(value);
+
+        public static object ExecuteChain(PipeChain pipeChain, CommandContext commandContext, IHost host, Dictionary<string, object> variables)
+        {
+            var result = Execute(pipeChain.Commands[0], commandContext, host, variables);
+            for (var i = 1; i < pipeChain.Commands.Length; i++)
+            {
+                result = Execute(pipeChain.Commands[i], commandContext, host, variables, result);
+            }
+
+            return result;
+        }
     }
 
 }

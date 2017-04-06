@@ -7,11 +7,13 @@ namespace pstudio.PowerConsole.Command
     {
         public sbyte Position { get; set; }
         public bool Mandatory { get; set; }
+        public bool AllowPipe { get; set; }
 
         public ParameterAttribute()
         {
             Position = -1;
             Mandatory = false;
+            AllowPipe = false;
         }
     }
 

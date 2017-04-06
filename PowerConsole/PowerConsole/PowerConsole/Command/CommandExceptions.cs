@@ -201,4 +201,70 @@ namespace pstudio.PowerConsole.Command
         {
         }
     }
+
+    /// <summary>
+    /// Thrown when the user pipes a value to a command that doesn't accept that type through piping.
+    /// </summary>
+    public class InvalidPipeArgumentTypeException : Exception
+    {
+        public InvalidPipeArgumentTypeException()
+        {
+        }
+
+        public InvalidPipeArgumentTypeException(string message) : base(message)
+        {
+        }
+
+        public InvalidPipeArgumentTypeException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+
+        protected InvalidPipeArgumentTypeException(SerializationInfo info, StreamingContext context) : base(info, context)
+        {
+        }
+    }
+
+    /// <summary>
+    ///  Thrown if the user provides more positional arguments than expected.
+    /// </summary>
+    public class UnexpectedPositionalArgument : Exception
+    {
+        public UnexpectedPositionalArgument()
+        {
+        }
+
+        public UnexpectedPositionalArgument(string message) : base(message)
+        {
+        }
+
+        public UnexpectedPositionalArgument(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+
+        protected UnexpectedPositionalArgument(SerializationInfo info, StreamingContext context) : base(info, context)
+        {
+        }
+    }
+
+    /// <summary>
+    ///  Thrown if the use tries to assign a value to a named parameter that has already been assigned through piping.
+    /// </summary>
+    public class NamedParameterAssignedThroughPiping : Exception
+    {
+        public NamedParameterAssignedThroughPiping()
+        {
+        }
+
+        public NamedParameterAssignedThroughPiping(string message) : base(message)
+        {
+        }
+
+        public NamedParameterAssignedThroughPiping(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+
+        protected NamedParameterAssignedThroughPiping(SerializationInfo info, StreamingContext context) : base(info, context)
+        {
+        }
+    }
 }

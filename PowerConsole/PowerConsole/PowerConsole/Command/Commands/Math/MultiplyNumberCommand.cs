@@ -6,7 +6,7 @@
     [Command("Multiply", "Number")]
     public class MultiplyNumberCommand : Command
     {
-        [Parameter(Position = 0, Mandatory = true)]
+        [Parameter(Position = 0, Mandatory = true, AllowPipe = true)]
         public double A { get; set; }
 
         [Parameter(Position = 1, Mandatory = true)]

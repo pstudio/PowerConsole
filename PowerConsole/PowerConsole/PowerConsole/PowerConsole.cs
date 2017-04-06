@@ -113,7 +113,7 @@ namespace pstudio.PowerConsole
 
         private object HandlePipeChain(PipeChain pipeChain)
         {
-            return null;
+            return CommandExecuter.ExecuteChain(pipeChain, _context.CommandContext, _host, _variables);
         }
 
         private object HandleReflection(Reflection reflection)
