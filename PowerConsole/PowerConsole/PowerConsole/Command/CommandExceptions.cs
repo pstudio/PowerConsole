@@ -26,6 +26,50 @@ namespace pstudio.PowerConsole.Command
     }
 
     /// <summary>
+    /// Thrown when trying to register a command with a name already registered.
+    /// </summary>
+    public class CommandNameRegisteredException : Exception
+    {
+        public CommandNameRegisteredException()
+        {
+        }
+
+        public CommandNameRegisteredException(string message) : base(message)
+        {
+        }
+
+        public CommandNameRegisteredException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+
+        protected CommandNameRegisteredException(SerializationInfo info, StreamingContext context) : base(info, context)
+        {
+        }
+    }
+
+    /// <summary>
+    /// Thrown if the command could not be created.
+    /// </summary>
+    public class CreateCommandFailedException : Exception
+    {
+        public CreateCommandFailedException()
+        {
+        }
+
+        public CreateCommandFailedException(string message) : base(message)
+        {
+        }
+
+        public CreateCommandFailedException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+
+        protected CreateCommandFailedException(SerializationInfo info, StreamingContext context) : base(info, context)
+        {
+        }
+    }
+
+    /// <summary>
     /// Thrown when an invalid <see cref="ParameterAttribute"/> Position value is provided.
     /// Position values must start at 0 and increase by exactly one for additional properties.
     /// </summary>

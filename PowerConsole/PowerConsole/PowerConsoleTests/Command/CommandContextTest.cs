@@ -21,8 +21,9 @@ namespace PowerConsoleTests.Command
         {
             _context.RegisterCommand<AddNumberCommand>();
 
-            Assert.IsTrue(_context.Commands.Count == 1);
-            Assert.IsNotNull(_context.Commands["ADD-NUMBER"]);
+            Assert.IsTrue(_context.CommandsRegistered == 1);
+            Assert.IsTrue(_context.IsCommandRegistered<AddNumberCommand>());
+            Assert.IsTrue(_context.IsCommandRegistered("Add-Number"));
         }
 
         [TestMethod]

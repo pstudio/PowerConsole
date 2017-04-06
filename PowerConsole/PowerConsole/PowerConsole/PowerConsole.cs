@@ -39,7 +39,6 @@ namespace pstudio.PowerConsole
              * should execute just fire a commandlet and then send a callback to the caller (UnityPowerConsole) when the command is done?
              * TODO: Implement first draft of a Command Manager. Load commands from assembly/namespace, allow execution of commands
              * TODO: ////!!!!!!!!Work on piping Next.!!!!!!!!//////////////
-             * possibly alter Parser so that it can parse Command -varname value
              */
             try
             {

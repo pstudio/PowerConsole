@@ -18,11 +18,11 @@ namespace pstudio.PowerConsole.Command
             // http://geekswithblogs.net/Madman/archive/2008/06/27/faster-reflection-using-expression-trees.aspx
             // http://www.palmmedia.de/Blog/2012/2/4/reflection-vs-compiled-expressions-vs-delegates-performance-comparision
 
-            var command = commandContext.Commands[parseCommand.CommandName.ToUpper()];
-            if (command == null)
-            {
-                throw new MissingCommandException($"The command: '{parseCommand.CommandName}' does not exist."); 
-            }
+            var command = commandContext[parseCommand.CommandName.ToUpper()];
+            //if (command == null)
+            //{
+            //    throw new MissingCommandException($"The command: '{parseCommand.CommandName}' does not exist."); 
+            //}
 
             command.Reset();
 
@@ -36,13 +36,13 @@ namespace pstudio.PowerConsole.Command
             {
                 var parseType = parseCommand.Arguments[positionalProperty.Attribute.Position];
 
-                TrySetPropertyValue(command.Command, positionalProperty.Property, parseType, variables);
+                TrySetPropertyValue(command, positionalProperty.Property, parseType, variables);
             }
 
             // Keep track of mandatory named properties
             var mandatoryProperties = command.NamedProperties.Where(prop => prop.Attribute.Mandatory).ToList();
 
-            for (int i = command.PositionalProperties.Count; i < parseCommand.Arguments.Length; i++)
+            for (var i = command.PositionalProperties.Count; i < parseCommand.Arguments.Length; i++)
             {
                 var parseType = parseCommand.Arguments[i];
 
@@ -57,7 +57,7 @@ namespace pstudio.PowerConsole.Command
                 // Check if the property is a flag
                 if (namedProperty.Property.PropertyType == typeof(bool))
                 {
-                    namedProperty.Property.SetValue(command.Command, true, null);
+                    namedProperty.Property.SetValue(command, true, null);
                     continue;
                 }
 
@@ -68,7 +68,7 @@ namespace pstudio.PowerConsole.Command
 
                 var argumentType = parseCommand.Arguments[i];
 
-                TrySetPropertyValue(command.Command, namedProperty.Property, argumentType, variables);
+                TrySetPropertyValue(command, namedProperty.Property, argumentType, variables);
 
                 // Remove property from list to indicate it has been set
                 mandatoryProperties.Remove(namedProperty);
@@ -78,8 +78,8 @@ namespace pstudio.PowerConsole.Command
             if (mandatoryProperties.Count > 0)
                 throw new MissingMandatoryParameter($"The mandatory named parameter '{mandatoryProperties.First().Property.Name}' is missing.");
 
-            command.Command._host = host;
-            return command.Command.Process();
+            command._host = host;
+            return command.Process();
         }
 
         private static void TrySetPropertyValue(Command command, PropertyInfo property, ParseType parseType, Dictionary<string, object> variables)
