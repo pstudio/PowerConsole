@@ -12,7 +12,7 @@ namespace pstudio.PowerConsole
     {
         private readonly List<string> _inputHistory = new List<string>(); 
         private readonly List<ParseType> _history = new List<ParseType>();
-        private readonly Dictionary<string, object> _variables = new Dictionary<string, object>();
+        //private readonly Dictionary<string, object> _variables = new Dictionary<string, object>();
 
         private readonly IContext _context;
         private object _lastValue;
@@ -38,7 +38,8 @@ namespace pstudio.PowerConsole
              * Examine Powershell commandlet implementation.
              * should execute just fire a commandlet and then send a callback to the caller (UnityPowerConsole) when the command is done?
              * TODO: Implement first draft of a Command Manager. Load commands from assembly/namespace, allow execution of commands
-             * TODO: ////!!!!!!!!Work on piping Next.!!!!!!!!//////////////
+             * TODO: Make a variable context instead of using a dictionary directly
+             * TODO: Handle reflection
              */
             try
             {
@@ -107,13 +108,13 @@ namespace pstudio.PowerConsole
             }
 
             var value = HandleParseType(assignment.Value);
-            _variables[assignment.Variable] = value;
+            _context.VariableContext[assignment.Variable] = value;
             return value;
         }
 
         private object HandlePipeChain(PipeChain pipeChain)
         {
-            return CommandExecuter.ExecuteChain(pipeChain, _context.CommandContext, _host, _variables);
+            return CommandExecuter.ExecuteChain(pipeChain, _context, _host);
         }
 
         private object HandleReflection(Reflection reflection)
@@ -123,7 +124,7 @@ namespace pstudio.PowerConsole
 
         private object HandleCommand(Parser.Command command)
         {
-            return CommandExecuter.Execute(command, _context.CommandContext, _host, _variables);
+            return CommandExecuter.Execute(command, _context, _host);
         }
 
         private object HandleVariable(string identifier)
@@ -133,12 +134,12 @@ namespace pstudio.PowerConsole
                 return _lastValue;
             }
 
-            if (!_variables.ContainsKey(identifier))
+            if (!_context.VariableContext.VariableExists(identifier))
             {
-                _variables[identifier] = null;
+                _context.VariableContext[identifier] = null;
             }
 
-            return _variables[identifier];
+            return _context.VariableContext[identifier];
         }
 
     }

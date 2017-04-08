@@ -69,6 +69,7 @@
     <Compile Include="Parser\PowerParser.cs" />
     <Compile Include="PowerConsole.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Variables\VariableContext.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

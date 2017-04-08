@@ -42,9 +42,6 @@ namespace pstudio.PowerConsole.Command
 
         internal void Reset()
         {
-            // TODO: Considering Positional Properties are currently mandatory this is unnecessary. 
-            // Check if positional properties are mandatory in PowerShell.
-            // Consider if positional properties should be mandatory.
             foreach (var property in PositionalProperties)
             {
                 property.Property.SetValue(this, property.Default, null);

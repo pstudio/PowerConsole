@@ -1,4 +1,5 @@
 ﻿using pstudio.PowerConsole.Command;
+using pstudio.PowerConsole.Variables;
 
 namespace pstudio.PowerConsole.Context
 {
@@ -20,6 +21,7 @@ namespace pstudio.PowerConsole.Context
         string LastResultVariableIdentifier { get; }
 
         CommandContext CommandContext { get; }
+        VariableContext VariableContext { get; }
     }
 
 }

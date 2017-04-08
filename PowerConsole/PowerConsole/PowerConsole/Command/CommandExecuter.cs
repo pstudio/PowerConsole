@@ -2,22 +2,26 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using pstudio.PowerConsole.Context;
 using pstudio.PowerConsole.Host;
 using pstudio.PowerConsole.Parser;
+using pstudio.PowerConsole.Variables;
 using UniRx.InternalUtil;
 
 namespace pstudio.PowerConsole.Command
 {
     internal static class CommandExecuter
     {
-        public static object Execute(Parser.Command parseCommand, CommandContext commandContext, IHost host,
-            Dictionary<string, object> variables, object pipeValue = null)
+        public static object Execute(Parser.Command parseCommand, IContext context, IHost host, object pipeValue = null)
         {
             // TODO: When the project is in a mature state, consider alternative ways to assign values to properties
             // Build setters in CommandContext.CommandInfo
             // http://stackoverflow.com/a/16082916
             // http://geekswithblogs.net/Madman/archive/2008/06/27/faster-reflection-using-expression-trees.aspx
             // http://www.palmmedia.de/Blog/2012/2/4/reflection-vs-compiled-expressions-vs-delegates-performance-comparision
+
+            var commandContext = context.CommandContext;
+            var variableContext = context.VariableContext;
 
             var command = commandContext[parseCommand.CommandName.ToUpper()];
             //if (command == null)
@@ -81,7 +85,7 @@ namespace pstudio.PowerConsole.Command
                         property = command.PositionalProperties[position++];
                     }
 
-                    TrySetPropertyValue(command, property.Property, parseType, variables);
+                    TrySetPropertyValue(command, property.Property, parseType, variableContext);
 
                     if (property.Attribute.Mandatory)
                         mandatoryProperties.Remove(property);
@@ -113,7 +117,7 @@ namespace pstudio.PowerConsole.Command
 
                 var argumentType = parseCommand.Arguments[i];
 
-                TrySetPropertyValue(command, namedProperty.Property, argumentType, variables);
+                TrySetPropertyValue(command, namedProperty.Property, argumentType, variableContext);
 
                 if (namedProperty.Attribute.Mandatory)
                     mandatoryProperties.Remove(namedProperty);
@@ -175,12 +179,12 @@ namespace pstudio.PowerConsole.Command
             return command.Process();
         }
 
-        private static void TrySetPropertyValue(Command command, PropertyInfo property, ParseType parseType, Dictionary<string, object> variables)
+        private static void TrySetPropertyValue(Command command, PropertyInfo property, ParseType parseType, VariableContext variableContext)
         {
             if (parseType.ParsedType == ParseType.Type.Parameter)
                 throw new InvalidArgumentTypeException($"An argument value type (string, number, variable) was expected but received a named parameter identifier '{parseType.Value}'");
 
-            var parameter = parseType.ParsedType == ParseType.Type.Variable ? variables[(string)parseType.Value] : parseType.Value;
+            var parameter = parseType.ParsedType == ParseType.Type.Variable ? variableContext[(string)parseType.Value] : parseType.Value;
 
             if (!property.PropertyType.IsInstanceOfType(parameter) && !IsNumericAssignment(property.PropertyType, parameter.GetType()))
                 throw new InvalidArgumentTypeException($"Expected type {property.PropertyType} but received {parameter.GetType()}");
@@ -199,12 +203,12 @@ namespace pstudio.PowerConsole.Command
         private static bool IsNumericAssignment(Type target, Type value) =>
             NumericTypes.Contains(target) && NumericTypes.Contains(value);
 
-        public static object ExecuteChain(PipeChain pipeChain, CommandContext commandContext, IHost host, Dictionary<string, object> variables)
+        public static object ExecuteChain(PipeChain pipeChain, IContext context, IHost host)
         {
-            var result = Execute(pipeChain.Commands[0], commandContext, host, variables);
+            var result = Execute(pipeChain.Commands[0], context, host);
             for (var i = 1; i < pipeChain.Commands.Length; i++)
             {
-                result = Execute(pipeChain.Commands[i], commandContext, host, variables, result);
+                result = Execute(pipeChain.Commands[i], context, host, result);
             }
 
             return result;
